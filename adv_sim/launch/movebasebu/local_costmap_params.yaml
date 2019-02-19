@@ -1,0 +1,13 @@
+local_costmap:
+  global_frame: /map
+  robot_base_frame: /base_footprint
+  update_frequency: 20.0
+  publish_frequency: 20.0
+  static_map: true
+  rolling_window: false
+  width: 3.0
+  height: 3.0
+  resolution: 0.05
+  planner_frequency: 20.0
+  planner_patiente: 20.0
+  controller_frequency: 20.0
