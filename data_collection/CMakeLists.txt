@@ -9,6 +9,8 @@ FILE(GLOB RPLIDAR_SDK_SRC
   "${RPLIDAR_SDK_PATH}/src/*.cpp"
 )
 
+#FIND_PACKAGE(PCL 1.5 REQUIRED)
+
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   rosconsole
@@ -18,6 +20,8 @@ find_package(catkin REQUIRED COMPONENTS
 #  lamp_msgs
 #  message_generation
   visualization_msgs
+#  pcl_ros
+#  pcl_conversions
 )
 
 add_message_files(
@@ -39,12 +43,17 @@ include_directories(
   ${RPLIDAR_SDK_PATH}/include
   ${RPLIDAR_SDK_PATH}/src
   ${catkin_INCLUDE_DIRS}
+  ${PCL_INCLUDE_DIRS}
 )
 
-
+#link_directories(${PCL_LIBRARY_DIRS})
+#add_definitions(${PCL_DEFINITIONS})
 
 add_executable(data_collection src/data_collection.cpp)
 target_link_libraries(data_collection ${catkin_LIBRARIES})
+
+add_executable(GPS_data_collect src/GPS_data_collect.cpp)
+target_link_libraries(GPS_data_collect ${catkin_LIBRARIES})
 
 
 install(TARGETS data_collection

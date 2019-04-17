@@ -1,7 +1,0 @@
-<?xml version="1.0"?>
-<launch>
-
-<node  name="data_collection"  pkg="data_collection" type="data_collection" output="screen">
-</node>
-
-</launch>

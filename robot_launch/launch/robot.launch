@@ -1,0 +1,136 @@
+<?xml version="1.0"?>
+<launch>
+
+  <!-- launch sensor and move_base node -->
+  <include file="$(find robot_launch)/launch/agv_move_base.launch" />
+
+<!-- Build the tf tree -->
+<node pkg="tf" type="static_transform_publisher" name="base_footprint_to_base_link_broadcaster" args="0 0 0 0 0 0 /base_footprint /base_link 100"/>
+<node name="base_imu_link" pkg="tf" type="static_transform_publisher" args="0 0 0 0 0 0 /base_link /base_imu_link 50"/>
+<node name="map_to_odom_link" pkg="tf" type="static_transform_publisher" args="0 0 0 0 0 0 /map /odom 50"/>
+
+<!-- Run the robot_pose_ekf -->
+<!-- <include file="$(find robot_pose_ekf)/robot_pose_ekf.launch" /> -->
+<node pkg="robot_pose_ekf" type="robot_pose_ekf" name="robot_pose_ekf" output="screen">
+  <param name="output_frame" value="odom_combined"/>
+  <param name="base_footprint_frame" value="base_footprint"/>
+  <param name="freq" value="10.0"/>
+  <param name="sensor_timeout" value="1.0"/>
+  <param name="odom_used" value="true"/>
+  <param name="imu_used" value="false"/>
+  <param name="vo_used" value="false"/>
+  <param name="debug" value="true"/>
+  <!-- <remap from="odom" to="pr2_base_odometry/odom" /> -->
+
+</node>
+
+  <param name="/use_sim_time" value="false" />
+
+  <!-- Load the URDF/Xacro model of our robot -->
+  <arg name="urdf_file" default="$(find xacro)/xacro.py '$(find robot_launch)/my_xacro/myrobot.urdf'" />
+  <param name="robot_description" command="$(arg urdf_file)" />
+
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher">
+      <param name="publish_frequency" type="double" value="20.0" />
+  </node>
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" >
+     <param name="/use_gui" value="false"/>
+     <param name="rate" value="20.0"/>
+  </node>
+
+<!-- Run the map server -->
+<node name="map_server" pkg="map_server" type="map_server" args="$(find robot_launch)/maps/jt_l3_map.yaml"/>
+
+<!-- Fire up AMCL >
+  <include file="$(find rbx1_nav)/launch/tb_amcl.launch" /-->
+
+<!-- Fire up AMCL -->
+  <!-- amcl node -->
+ <!-- <node pkg="amcl" type="amcl" name="amcl" output="screen">
+ <remap from="scan" to="scan"/>
+
+ <param name="use_map_topic" value="ture"/>
+  <param name='odom_frame_id' value="odom_combined"/>
+  <param name='base_frame_id' value="base_link"/>
+  <param name='global_frame_id' value="map"/>
+  <param name="odom_model_type" value="diff"/>
+  <param name="odom_alpha5" value="0.1"/>
+  <param name="transform_tolerance" value="0.5"/>
+  <param name="gui_publish_rate" value="10.0"/>
+  <param name="laser_max_beams" value="60"/>
+  <param name="min_particles" value="100"/>
+  <param name="max_particles" value="5000"/>
+  <param name="kld_err" value="0.1"/>
+  <param name="kld_z" value="0.99"/>
+  <param name="odom_alpha1" value="0.1"/>
+ <param name="odom_alpha2" value="0.1"/>
+
+ <param name="odom_alpha3" value="0.1"/>
+  <param name="odom_alpha4" value="0.1"/>
+  <param name="laser_z_hit" value="0.95"/>
+  <param name="laser_z_short" value="0.025"/>
+  <param name="laser_z_max" value="0.025"/>
+  <param name="laser_z_rand" value="0.05"/>
+  <param name="laser_sigma_hit" value="0.2"/>
+  <param name="laser_lambda_short" value="0.1"/>
+ <param name="laser_model_type" value="likelihood_field"/>
+
+ <param name="laser_min_range" value="0.2"/>
+  <param name="laser_max_range" value="6.0"/>
+  <param name="laser_likelihood_max_dist" value="2.0"/>
+  <param name="update_min_d" value="0.05"/>
+  <param name="update_min_a" value="0.05"/>
+  <param name="resample_interval" value="3"/>
+  <param name="transform_tolerance" value="0.5"/>
+  <param name="recovery_alpha_slow" value="0.0"/>
+  <param name="recovery_alpha_fast" value="0.0"/>
+
+  <param name="initial_cov_xx" value="0.25"/>
+  <param name="initial_cov_yy" value="0.25"/>
+  <param name="initial_cov_zz" value="10"/>
+</node> -->
+
+ <node pkg="amcl" type="amcl" name="amcl" output="screen">
+  <remap from="scan" to="rslidar/scan"/>
+        <param name="use_map_topic"             value="ture"/>
+        <param name="odom_frame_id"             value="odom_combined"/>
+      <param name="base_frame_id"             value="base_footprint"/>
+      <param name="global_frame_id"           value="map"/>
+      <param name="odom_model_type"           value="diff"/>
+      <param name="gui_publish_rate"          value="10.0"/>
+
+  <param name="laser_max_beams"           value="60"/>
+        <param name="laser_min_range"           value="0.2"/>
+        <param name="laser_max_range"           value="10.0"/>
+
+  <param name="min_particles"             value="500"/>
+      <param name="max_particles"             value="5000"/>
+
+      <param name="laser_z_hit"               value="0.95"/>
+      <param name="laser_z_short"             value="0.025"/>
+      <param name="laser_z_max"               value="0.025"/>
+      <param name="laser_z_rand"              value="0.05"/>
+      <param name="laser_sigma_hit"           value="0.2"/>
+      <param name="laser_lambda_short"        value="0.1"/>
+
+      <param name="update_min_d"              value="0.1"/>
+      <param name="update_min_a"              value="0.2"/>
+      <param name="resample_interval"         value="3"/>
+
+      <param name="transform_tolerance"       value="0.5"/>
+
+      <param name="recovery_alpha_slow"       value="0.0"/>
+      <param name="recovery_alpha_fast"       value="0.0"/>
+        <param name="initial_cov_xx"            value="0.25"/>
+        <param name="initial_cov_yy"            value="0.25"/>
+        <param name="initial_cov_aa"            value="10.0"/>
+    </node>
+
+
+<!-- start rviz -->
+
+<node pkg="rviz" type="rviz" name="rviz"
+    args="-d $(find robot_launch)/agv_robot.rviz"/>
+
+
+</launch>
