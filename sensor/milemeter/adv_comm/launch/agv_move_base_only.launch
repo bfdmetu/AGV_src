@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<launch>
+
+<!-- Run the robot_pose_ekf -->
+<include file="$(find robot_pose_ekf)/robot_pose_ekf.launch" />
+
+<!-- include move_base param -->
+<!-- <include file="$(find adv_comm)/launch/fake_move_base.launch" /> -->
+
+<!-- Load the URDF/Xacro model of our robot -->
+  <arg name="urdf_file" default="$(find xacro)/xacro.py '$(find adv_sim)/my_xacro/myrobot.urdf'" />
+  <param name="robot_description" command="$(arg urdf_file)" />
+
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher">
+      <param name="publish_frequency" type="double" value="20.0" />
+  </node>
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher" />
+
+
+<!-- Run the map server -->
+<node name="map_server" pkg="map_server" type="map_server" args="/root/catkin_ws/src/maps/map_z1.yaml"/>
+
+
+<!-- Run a static transform between /odom and /map -->
+<!--   <node pkg="tf" type="static_transform_publisher" name="odom_map_broadcaster" args="0 0 0 0 0 0 /map /odom 100" /> -->
+  <node pkg="tf" type="static_transform_publisher" name="base_link_to_base_footprint_broadcaster" args="0 0 0 0 0 0 /base_footprint /base_link 100" />
+  <node pkg="tf" type="static_transform_publisher" name="odom_map_broadcaster" args="0 0 0 0 0 0 /map /odom 100" />
+  <node pkg="tf" type="static_transform_publisher" name="odom_combined_map_broadcaster" args="0 0 0 0 0 0 /map /odom_combined 100" />
+  <node name="base_imu_link" pkg="tf" type="static_transform_publisher" args="0 0 0 0 3.1425926 0 /base_link /base_imu_link 50"/>
+
+<!-- <node pkg="tf" type="static_transform_publisher" name="base_footprint_wheel_to_base" args="0 0 0 0 0 0 /base_footprint_wheel /base_footprint 100" /> -->
+
+<!-- Run fake localization compatible with AMCL output -->
+ <!--  <node pkg="fake_localization" type="fake_localization" name="fake_localization" clear_params="true" output="screen">
+     <remap from="base_pose_ground_truth" to="odom_combined" />
+     <param name="global_frame_id" value="map" />
+     <param name="base_frame_id" value="base_footprint_wheel" />
+  </node> -->
+
+<!-- start rviz -->
+<node pkg="rviz" type="rviz" name="rviz"
+    args="-d $(find adv_sim)/test_odom.rviz"/>
+
+
+</launch>

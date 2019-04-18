@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<launch>
+
+  <!-- launch odom node -->
+  <include file="$(find adv_comm)/launch/get_message.launch" />
+  <!-- launch imu node -->
+  <include file="$(find razor_imu_9dof)/launch/razor-pub-v3.launch" />
+
+  <!-- start rplidar -->
+  <!-- <node name="rplidarNode"          pkg="rplidar_ros"  type="rplidarNode" output="screen">
+    <param name="serial_port"         type="string" value="/dev/ttyUSB001"/>
+    <param name="serial_baudrate"     type="int"    value="115200"/>
+    <param name="frame_id"            type="string" value="laser"/>
+    <param name="inverted"            type="bool"   value="false"/>
+    <param name="angle_compensate"    type="bool"   value="true"/>
+  </node> -->
+
+  <!-- launch rslidar node -->
+  <include file="$(find rslidar_pointcloud)/launch/rs_lidar_16.launch" />
+  <include file="$(find pointcloud_to_laserscan)/launch/xiaoqiang_rslidar.launch" />
+
+  <!-- include move_base param -->
+  <!-- <include file="$(find adv_comm)/launch/fake_move_base.launch" /> -->
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+        <rosparam file="$(find adv_comm)/param/move_base_params.yaml" command="load" />
+        <rosparam file="$(find adv_comm)/param/global_costmap_params.yaml" command="load" ns="global_costmap"/>
+        <rosparam file="$(find adv_comm)/param/local_costmap_params.yaml" command="load" ns="local_costmap"/>
+        <rosparam file="$(find adv_comm)/param/global_planner_params.yaml" command="load" ns="GlobalPlanner"/>
+        <rosparam file="$(find adv_comm)/param/dwa_local_planner_params.yaml" command="load" ns="DWAPlannerROS"/>
+    </node>
+
+</launch>

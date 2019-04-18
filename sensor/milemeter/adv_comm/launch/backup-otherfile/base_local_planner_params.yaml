@@ -1,0 +1,30 @@
+controller_frequency: 5.0
+recovery_behavior_enabled: true
+clearing_rotation_allowed: false
+
+TrajectoryPlannerROS:
+   max_vel_x: 0.2
+   min_vel_x: 0.05
+   max_vel_theta: 1.0
+   max_rotation_vel: 5
+   min_in_place_vel_theta: 0.4  
+
+   acc_lim_theta: 3.2  
+   acc_lim_x: 2.5  
+   acc_lim_y: 2.5  
+   
+   holonomic_robot: false
+
+   #goal tolerance
+   yaw_goal_tolerance: 0.8 # 
+   xy_goal_tolerance: 0.8  # 
+   latch_xy_goal_tolerance: true   
+
+   # forward simulation
+   sim_time: 2.0
+   vx_samples: 4
+   vy_samples: 0
+   vtheta_samples: 10
+   sim_granularity: 0.1
+   angular_sim_granularity: 0.1
+   penalize_negative_x: false

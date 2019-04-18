@@ -1,0 +1,16 @@
+
+obstacle_range: 5.5
+raytrace_range: 5.0
+robot_radius: 0.3
+inflation_radius: 0.4
+resolution: 0.1
+update_frequency: 10.0
+publish_frequency: 10.0
+
+max_obstacle_height: 0.6
+min_obstacle_height: 0.0
+
+observation_sources: laser_scan_sensor
+
+laser_scan_sensor: { data_type: LaserScan, topic: /scan, marking: true, clearing: true}
+

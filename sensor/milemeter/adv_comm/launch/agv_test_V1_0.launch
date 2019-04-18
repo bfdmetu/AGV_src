@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<launch>
+
+  <!-- launch agv_move_base node -->
+  <include file="$(find adv_comm)/launch/agv_move_base.launch" />
+
+  <!-- launch agv_move_base node -->
+  <include file="$(find adv_sim)/launch/agv_amcl_slam_v2.launch" />
+
+</launch>

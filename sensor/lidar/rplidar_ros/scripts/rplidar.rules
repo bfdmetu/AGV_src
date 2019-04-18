@@ -1,0 +1,19 @@
+# set the udev rule , make the device_port be fixed by rplidar
+#
+KERNEL=="ttyUSB*", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", MODE:="0777", SYMLINK+="ttyUSB001"
+
+KERNEL=="ttyUSB*", ATTRS{idVendor}=="067b", ATTRS{idProduct}=="2303", MODE:="0777", SYMLINK+="ttyUSB002"
+
+#IMU 的串口
+KERNEL=="ttyUSB*", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="7523", MODE:="0777", ATTRS{devnum}=="4", SYMLINK+="ttyUSB003"
+
+#表示跟底盘通信的串口
+KERNEL=="ttyUSB*", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="7523", MODE:="0777", ATTRS{devnum}=="9", SYMLINK+="ttyUSB004"
+
+
+#GPS串口
+KERNELS=="1-2.2", KERNEL=="ttyUSB*", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="7523", MODE:="0777", SYMLINK+="ttyUSB009"
+
+#全向轮小车底盘串口以及编码器里程计
+KERNELS=="1-2.4", KERNEL=="ttyUSB*", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="7523", MODE:="0777", SYMLINK+="ttyUSB008"
+

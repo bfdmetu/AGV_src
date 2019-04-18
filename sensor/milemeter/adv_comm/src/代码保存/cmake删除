@@ -1,0 +1,14 @@
+add_executable(slamtoADV src/slam_listener.cpp)
+target_link_libraries(slamtoADV ${catkin_LIBRARIES})
+
+add_executable(testlistener src/test_listener.cpp)
+target_link_libraries(testlistener ${catkin_LIBRARIES})
+
+add_executable(lamp_msgs_send src/my_server.cpp)
+target_link_libraries(lamp_msgs_send ${catkin_LIBRARIES})
+
+add_executable(cmdvelget src/cmd_vel_get.cpp)
+target_link_libraries(cmdvelget ${catkin_LIBRARIES})
+
+add_executable(odom_test src/odom_test.cpp)
+target_link_libraries(odom_test ${catkin_LIBRARIES})
