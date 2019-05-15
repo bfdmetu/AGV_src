@@ -1,3 +1,7 @@
+
+
+
+
 #include "math.h"
 #include "ros/ros.h"
 #include "my_serial_port.h"
@@ -69,6 +73,8 @@ public:
 
     fd_set rd1,rd3;
 };
+
+
 void lampCallback(const std_msgs::UInt8MultiArray::ConstPtr& data);
 void scanCallback(const sensor_msgs::LaserScan::ConstPtr& scan);
 void velCallback(const geometry_msgs::Twist::ConstPtr & cmd_input);
