@@ -1,6 +1,9 @@
-
-
-
+/***
+***
+*** rplidar_client.cpp
+*** milemeter_code
+***
+***/
 
 #include "math.h"
 #include "ros/ros.h"
@@ -25,6 +28,7 @@
 #define X_Offsite 2.0
 #define Y_Offsite 3.0
 
+
 class send_status
 {
 public:
@@ -37,7 +41,7 @@ public:
     //unsigned char yaw_h;
     //unsigned char yaw_l;
     char barrier_f;
-    char buff[ADV_MSG_LENGTH];
+    char send_buff[ADV_MSG_LENGTH];
     char rcv_buff1[MAXSIZE];
     char rcv_buff_save1[MAXSIZE];
 
@@ -47,7 +51,7 @@ public:
     char lamp_color;
     char lamp_time;
     int save_end1;
-    int save_end3;
+
     double location[3];
     double speed[2];
     char ADVnum;
@@ -97,18 +101,19 @@ send_status ss;
 
 int main(int argc, char **argv)
 {
+    //定义节点名称
     ros::init(argc, argv, "rplidar_node_client");
 
+    //初始化参数
     initial_all();
 
-    ros::NodeHandle n;
-    ros::Subscriber sub1 = n.subscribe<sensor_msgs::LaserScan>("scan", 1000, scanCallback);    //订阅雷达主题，扫描障碍物
-    //ros::Subscriber sub2 = n.subscribe<geometry_msgs::PoseStamped>("slam_out_pose", 10, poscallback);
-    //ros::Subscriber sub3 = n.subscribe<std_msgs::UInt8MultiArray>("lamp_signal", 10, lampCallback); //订阅信号灯，获取灯色与倒计时
-    ros::Subscriber sub = n.subscribe<geometry_msgs::Twist>("/turtle1/cmd_vel", 20, velCallback); //订阅/cmd_vel主题
-    ros::Subscriber sub2 = n.subscribe<geometry_msgs::Twist>("cmd_vel", 20, velCallback_motorspeed);
+    ros::NodeHandle node;
+    ros::Subscriber sub_0 = node.subscribe<sensor_msgs::LaserScan>("scan", 1000, scanCallback);    //订阅雷达主题，扫描障碍物
+    ros::Subscriber sub_1 = node.subscribe<geometry_msgs::Twist>("/turtle1/cmd_vel", 20, velCallback); //订阅/turtle1/cmd_vel主题 测试使用
+    ros::Subscriber sub_2 = node.subscribe<geometry_msgs::Twist>("cmd_vel", 20, velCallback_motorspeed); //订阅move_base发出的速度主题，将速度转换到电机进行运动
 
-    ros::Publisher odom_pub= n.advertise<nav_msgs::Odometry>("odom", 10); //定义要发布/odom主题
+    ros::Publisher odom_pub= node.advertise<nav_msgs::Odometry>("odom", 10); //定义要发布/odom主题
+
     nav_msgs::Odometry odom;//定义里程计对象
     float covariance[36] = {0.01,   0,    0,     0,     0,     0,  // covariance on gps_x
                             0,  0.01, 0,     0,     0,     0,  // covariance on gps_y
@@ -122,7 +127,6 @@ int main(int argc, char **argv)
         odom.pose.covariance[i] = covariance[i];;
     }
 
-
     tf::TransformListener listener;
     tf::StampedTransform transform;
 
@@ -131,22 +135,23 @@ int main(int argc, char **argv)
     int cur_time=clock();
     int last_time=clock()-10;
 
+
     while (ros::ok())
     {
         cur_time=clock();
-        //一百毫秒
-	if((int(cur_time - last_time)) >= 100000)
+        //一百毫秒 主程序运行在10HZ
+      	if((int(cur_time - last_time)) >= 100000)
         {
+          //操作串口下发速度控制指令以及接收VCU的指令
           sp1operation();
-	  last_time = cur_time;
-
+	        last_time = cur_time;
+          //利用从VCU得到的编码器数据进行里程计计算
           calculate_odom(odom);
+          //发布里程计主题
           odom_pub.publish(odom);
         }
-	ros::spinOnce();
-	//loop_rate.sleep();
+        ros::spinOnce();
     }
-    //ros::spin();
 
     return 0;
 }
@@ -154,11 +159,12 @@ int main(int argc, char **argv)
 void initial_all()
 {
     ss.save_end1=0;
-    ss.save_end3=0;
+
     for(int i=0;i<3;i++)
         ss.location[i]=0.0;
     for(int i=0;i<2;i++)
         ss.speed[i]=0.0;
+
     ss.sp1.open_port(11);
     ss.sp1.set_port();
 
@@ -177,6 +183,10 @@ void initial_all()
     ss.lamp_time=0x20;
 }
 
+/*串口发送底盘驱动控制帧，并接收采集数据帧
+ *输入：无
+ *输出：无
+ */
 void sp1operation()
 {
     //ROS_INFO("I heard a laser scan");
@@ -184,22 +194,22 @@ void sp1operation()
     if(ss.location[0]<0) ss.barrier_f|=0x80;
     if(ss.location[1]<0) ss.barrier_f|=0x40;
 
-    ss.buff[0]=0x10;
-    ss.buff[1]=0x81;
-    ss.buff[2]=high_two(ss.speed[0]);
-    ss.buff[3]=low_two(ss.speed[0]);
-    ss.buff[4]=high_two(ss.speed[1]);
-    ss.buff[5]=low_two(ss.speed[1]);
-    ss.buff[6]=ss.barrier_f;
-    //ss.buff[7]=ss.lamp_color;
-    ss.buff[7]=ss.motor_flag;
-    ss.buff[8]=ss.lamp_time;
-    //ss.buff[7]=0x04;//绿灯4
-    //ss.buff[8]=0x10;//信号灯时间
-    ss.buff[9]=bcc_check(ss.buff,9);
-    ss.buff[10]=0x03;
+    ss.send_buff[0]=0x10;
+    ss.send_buff[1]=0x81;
+    ss.send_buff[2]=high_two(ss.speed[0]);
+    ss.send_buff[3]=low_two(ss.speed[0]);
+    ss.send_buff[4]=high_two(ss.speed[1]);
+    ss.send_buff[5]=low_two(ss.speed[1]);
+    ss.send_buff[6]=ss.barrier_f;
+    //ss.send_buff[7]=ss.lamp_color;
+    ss.send_buff[7]=ss.motor_flag;
+    ss.send_buff[8]=ss.lamp_time;
+    //ss.send_buff[7]=0x04;//绿灯4
+    //ss.send_buff[8]=0x10;//信号灯时间
+    ss.send_buff[9]=bcc_check(ss.send_buff,9);
+    ss.send_buff[10]=0x03;
 
-    write(ss.sp1.return_port(), ss.buff, ADV_MSG_LENGTH);
+    write(ss.sp1.return_port(), ss.send_buff, ADV_MSG_LENGTH);
 
     FD_ZERO(&ss.rd1);
     FD_SET(ss.sp1.return_port(),&ss.rd1);
@@ -209,42 +219,37 @@ void sp1operation()
     //fd method to read sp
     //while(FD_ISSET(ss.sp.return_port(),&ss.rd1))
     int retval=0;
-    retval=select(ss.sp1.return_port()+1,&ss.rd1,NULL,NULL,&tv);
-    if(retval < 0)
-        perror("select error!\n");
+    retval=select(ss.sp1.return_port()+1,&ss.rd1, NULL, NULL, &tv);
+    if(retval < 0) perror("select error!\n");
     else
     {
-        if(retval && FD_ISSET(ss.sp1.return_port(),&ss.rd1))
-	{
-            int s1_recv_len=read(ss.sp1.return_port(),ss.rcv_buff1,MAXSIZE);
-	    //ROS_INFO("get: %x,%x,%x, len:%d",ss.rcv_buff1[0],ss.rcv_buff1[1],ss.rcv_buff1[2],s1_recv_len);
-
-            for(i=0; i<s1_recv_len; i++ ){
-                ss.rcv_buff_save1[ss.save_end1]=ss.rcv_buff1[i];
+        if(retval && FD_ISSET(ss.sp1.return_port(), &ss.rd1))
+	      {
+            int s1_recv_len=read(ss.sp1.return_port(), ss.rcv_buff1, MAXSIZE);
+            for(i=0; i<s1_recv_len; i++ )
+            {
+                ss.rcv_buff_save1[ss.save_end1] = ss.rcv_buff1[i];
                 ss.save_end1++;
-		if(ss.save_end1>=MAXSIZE)
-		   ss.save_end1=0;
+            		if(ss.save_end1 >= MAXSIZE) ss.save_end1=0;
             }
-            if(ss.save_end1>=ADV_MSG_LENGTH)
+            if(ss.save_end1 >= ADV_MSG_LENGTH)
             {
                 for(i=0;i<=ss.save_end1-ADV_MSG_LENGTH;i++)
                 {
-                    if(ss.rcv_buff_save1[i]==0x10&&(unsigned char)ss.rcv_buff_save1[i+1]==0x82)
+                    if(ss.rcv_buff_save1[i]==0x10 && (unsigned char)ss.rcv_buff_save1[i+1]==0x82)
                     {
-                       if(bcc_check(ss.rcv_buff_save1,i,ADV_MSG_LENGTH-2)==ss.rcv_buff_save1[i+ADV_MSG_LENGTH-2])
+                       if(bcc_check(ss.rcv_buff_save1,i,ADV_MSG_LENGTH-2) == ss.rcv_buff_save1[i+ADV_MSG_LENGTH-2])
                         {
-            			    
-				ss.left_enc = int(ss.rcv_buff_save1[i+2]*0xff + ss.rcv_buff_save1[i+3]);
-				ss.right_enc = int(ss.rcv_buff_save1[i+4]*0xff + ss.rcv_buff_save1[i+5]);
-            			    
-			            //ROS_INFO("status: %d,%d ",ss.left_enc ,ss.right_enc);
-                                    ss.save_end1=0;
 
+                    				ss.left_enc = int(ss.rcv_buff_save1[i+2]*0xff + ss.rcv_buff_save1[i+3]);
+                    				ss.right_enc = int(ss.rcv_buff_save1[i+4]*0xff + ss.rcv_buff_save1[i+5]);
+
+                            ss.save_end1=0;
                         }
                     }
                 }
             }
-	}
+	      }
     }
 }
 
@@ -288,6 +293,7 @@ int motor_angle_limit(float limit_angle)
 
     return motor_angle_limit_flag;
 }
+
 
 void velCallback_motorspeed(const geometry_msgs::Twist::ConstPtr & cmd_input)
 {
@@ -429,10 +435,10 @@ void scanCallback(const sensor_msgs::LaserScan::ConstPtr& scan)
     if(bflag>5) ss.barrier_f=1;
     else ss.barrier_f=0;
     /**************test****************************/
-    //ss.buff[0]=0x10;
-    //ss.buff[1]=0x81;
+    //ss.send_buff[0]=0x10;
+    //ss.send_buff[1]=0x81;
 
-    //write(ss.sp.return_port(), ss.buff, 2);
+    //write(ss.sp.return_port(), ss.send_buff, 2);
     /******************test************************/
 }
 
@@ -514,12 +520,12 @@ int calculate_odom(nav_msgs::Odometry & odom)
     float ticks_per_meter=3670.86509;   //设定多少个脉冲前进一米
     float wheel_track=1.555;          //轮间距
     float dt=float(float(current_time-ss.last_time)/CLOCKS_PER_SEC);   //与上次接受odom的时间差
-    
+
 	if (ss.left_enc > 65536/2) {
 		ss.left_enc -= 65536;
 	}
 	if (ss.right_enc > 65536/2) {
-		ss.right_enc -= 65536;	
+		ss.right_enc -= 65536;
 	}
 
     float dleft=float(ss.left_enc)/ticks_per_meter;   //与上次接受odom的左轮移动差
