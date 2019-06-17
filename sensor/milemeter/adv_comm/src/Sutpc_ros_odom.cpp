@@ -395,7 +395,7 @@ void sp1operation()
  */
 int16_t get_motor_speed(u_char speed, u_char dir){
     int16_t output_speed;
-    //各电机的速度方向 只有三种状态 1代表速度数据为正，0代表停止，2代表速度数据为负
+    //各电机的速度方向 只有三种状态 0代表速度数据为正，1代表停止，2代表速度数据为负
     switch (dir) {
         case 0:
             output_speed = speed;
